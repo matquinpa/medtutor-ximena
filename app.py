@@ -16,107 +16,215 @@ from langchain_core.messages import HumanMessage
 from pydantic import BaseModel, Field
 from typing import List
 
-# --- CONFIGURACIÓN DE PÁGINA OPTIMIZADA PARA IPAD ---
+# --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
-    page_title="MedTutor Pro - Ximena",
-    page_icon="🩺",
+    page_title="MedTutor Studio — Ximena",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# --- 🎨 DISEÑO UI/UX PREMIUM (OPTIMIZADO PARA IPAD & APPLE PENCIL) ---
+# --- DISEÑO UI/UX AESTHETIC, MINIMALISTA Y EDITORIAL (CERO EMOJIS) ---
 css = """
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
 html, body, [class*="css"] {
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Banner Principal Estético */
-.hero-banner {
-    background: linear-gradient(135deg, #0F2027 0%, #203A43 50%, #2C5364 100%);
-    border-left: 8px solid #38ef7d;
-    padding: 32px;
-    border-radius: 24px;
-    color: white;
-    margin-bottom: 25px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.18);
-}
-.hero-banner h1 {
-    color: #ffffff;
-    margin: 0;
-    font-size: 2.5rem;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-}
-.hero-banner p {
-    color: #cbd5e1;
-    margin: 8px 0 0 0;
-    font-size: 1.1rem;
+/* Tipografía Editorial para Títulos */
+h1, h2, .serif-title {
+    font-family: 'Cormorant Garamond', serif !important;
+    letter-spacing: -0.3px;
 }
 
-/* Tarjeta de Pregunta tipo UWorld / Amboss */
+/* Banner Principal con Imagen Aesthetic Superpuesta */
+.hero-container {
+    position: relative;
+    background-image: linear-gradient(120deg, rgba(30, 27, 36, 0.82) 0%, rgba(74, 58, 75, 0.72) 100%), url('https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1600&q=80');
+    background-size: cover;
+    background-position: center;
+    padding: 48px 40px;
+    border-radius: 24px;
+    color: #ffffff;
+    margin-bottom: 32px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.hero-tag {
+    display: inline-block;
+    text-transform: uppercase;
+    font-size: 0.72rem;
+    letter-spacing: 2.5px;
+    font-weight: 700;
+    color: #f3d1dc;
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    padding: 6px 14px;
+    border-radius: 99px;
+    margin-bottom: 14px;
+}
+
+.hero-container h1 {
+    font-size: 3.1rem;
+    font-weight: 700;
+    margin: 0;
+    color: #ffffff;
+    line-height: 1.1;
+}
+
+.hero-container p {
+    font-size: 1.05rem;
+    color: #e2e8f0;
+    margin-top: 10px;
+    max-width: 620px;
+    font-weight: 400;
+}
+
+/* Tarjetas Visuales con Imagen de Cabecera */
+.feature-card {
+    background: var(--secondary-background-color);
+    border-radius: 20px;
+    overflow: hidden;
+    border: 1px solid rgba(226, 232, 240, 0.12);
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.04);
+}
+.feature-card-img {
+    height: 130px;
+    width: 100%;
+    object-fit: cover;
+    opacity: 0.88;
+}
+.feature-card-body {
+    padding: 22px 26px;
+}
+.feature-card-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 6px 0;
+}
+.feature-card-sub {
+    font-size: 0.9rem;
+    opacity: 0.7;
+    margin: 0;
+}
+
+/* Tarjeta de Pregunta Minimalista */
 .pregunta-caja {
     background: var(--secondary-background-color);
-    padding: 28px;
+    padding: 34px;
     border-radius: 22px;
-    border-left: 8px solid #00d2ff;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-    margin-bottom: 20px;
+    border-left: 5px solid #d48c9e;
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+    margin-bottom: 24px;
 }
 
-/* Tarjetas de Ayuda IA (Feynman y Mnemotecnias) */
+/* Cajas de Explicación Feynman y Mnemotecnia */
 .ai-helper-box {
-    background: linear-gradient(135deg, rgba(0,210,255,0.1) 0%, rgba(58,123,213,0.1) 100%);
-    border: 1px solid #00d2ff;
-    padding: 20px;
-    border-radius: 16px;
-    margin-top: 12px;
-    margin-bottom: 12px;
+    background: linear-gradient(135deg, rgba(212, 140, 158, 0.1) 0%, rgba(167, 139, 250, 0.08) 100%);
+    border: 1px solid rgba(212, 140, 158, 0.35);
+    padding: 24px;
+    border-radius: 18px;
+    margin-top: 14px;
+    margin-bottom: 14px;
+    line-height: 1.65;
 }
 
-/* Botones grandes y táctiles para iPad */
+/* Botones Estilizados */
 .stButton>button {
-    border-radius: 16px;
-    font-weight: 700;
-    padding: 0.65rem 1.2rem;
-    transition: all 0.2s ease;
+    border-radius: 14px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 0.65rem 1.4rem;
+    border: 1px solid rgba(212, 140, 158, 0.25);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .stButton>button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(0,210,255,0.25);
+    box-shadow: 0 8px 20px rgba(212, 140, 158, 0.22);
+    border-color: #d48c9e;
 }
 
-/* Opciones de Radio más grandes y fáciles de tocar en iPad */
+/* Botón Primario en Tono Rose-Mauve Aesthetic */
+button[kind="primary"] {
+    background: linear-gradient(135deg, #c97a8e 0%, #9b72aa 100%) !important;
+    color: white !important;
+    border: none !important;
+}
+
+/* Opciones de Examen Táctiles */
 div[role="radiogroup"] > label {
     background: var(--secondary-background-color);
-    padding: 16px 20px !important;
+    padding: 18px 22px !important;
     border-radius: 14px !important;
     margin-bottom: 10px !important;
-    border: 1px solid rgba(128,128,128,0.2) !important;
+    border: 1px solid rgba(148, 163, 184, 0.18) !important;
     transition: all 0.2s ease;
-    cursor: pointer;
 }
 div[role="radiogroup"] > label:hover {
-    border-color: #00d2ff !important;
+    border-color: #d48c9e !important;
+    background: rgba(212, 140, 158, 0.05);
 }
 
-/* Barra de progreso suave */
+/* Barra de progreso */
 .stProgress > div > div > div > div {
-    background-image: linear-gradient(90deg, #00d2ff 0%, #38ef7d 100%);
+    background-image: linear-gradient(90deg, #d48c9e 0%, #9b72aa 100%);
 }
 
-/* Etiquetas tipo Píldora */
+/* Píldora de Categoría */
 .pill-badge {
     display: inline-block;
-    background: rgba(56, 239, 125, 0.15);
-    color: #38ef7d;
-    padding: 4px 14px;
+    background: rgba(212, 140, 158, 0.15);
+    color: #d48c9e;
+    padding: 5px 16px;
     border-radius: 999px;
-    font-size: 0.85rem;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
     font-weight: 700;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
+}
+
+/* Perfil Lateral */
+.profile-card {
+    text-align: center;
+    padding: 24px 16px;
+    background: linear-gradient(180deg, rgba(212, 140, 158, 0.12) 0%, rgba(255, 255, 255, 0.01) 100%);
+    border-radius: 22px;
+    border: 1px solid rgba(212, 140, 158, 0.2);
+    margin-bottom: 18px;
+}
+.profile-avatar {
+    width: 115px;
+    height: 115px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #d48c9e;
+    padding: 3px;
+    background: white;
+    box-shadow: 0 8px 20px rgba(212, 140, 158, 0.25);
+}
+.quote-box {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 1.08rem;
+    text-align: center;
+    padding: 14px 18px;
+    border-radius: 14px;
+    background: var(--secondary-background-color);
+    border-left: 3px solid #d48c9e;
+    margin-bottom: 18px;
+    opacity: 0.9;
+}
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #34d399;
+    border-radius: 50%;
+    margin-right: 6px;
 }
 </style>
 """
@@ -175,7 +283,7 @@ class QuizMedico(BaseModel):
 
 parser_quiz = PydanticOutputParser(pydantic_object=QuizMedico)
 
-# --- VARIABLES DE ESTADO (SESSION STATE) ---
+# --- VARIABLES DE ESTADO ---
 defaults = {
     'texto_pdf': "",
     'lista_temas': [],
@@ -213,63 +321,66 @@ def limpiar_ayudas_pregunta():
     st.session_state.feynman_actual = ""
     st.session_state.mnemo_actual = ""
 
-# --- FRASES MOTIVACIONALES PARA XIMENA ---
+# --- FRASES EDITORIALES PARA XIMENA ---
 frases_ximena = [
-    "¡Cada página que estudias hoy es un paciente que ayudarás mañana, Dra. Ximena! 🩺✨",
-    "Respira hondo, toma agüita y confía en tu capacidad. ¡Vas increíble! 💪🧠",
-    "El primer semestre es pesado, pero tú eres más fuerte. ¡Paso a paso! 🌸📚",
-    "¡Orgullo futuro de la medicina! Un tema a la vez, sin presiones. 🌟👩‍⚕️"
+    "“Cada página que estudias hoy es una vida que sabrás cuidar mañana.”",
+    "“La excelencia médica se construye un capítulo a la vez. Confía en tu proceso.”",
+    "“La constancia vence al cansancio. Respira hondo y continúa, Dra. Ximena.”",
+    "“Estudiar medicina es un arte; hoy estás más cerca de tu meta que ayer.”"
 ]
 
-# --- PANEL LATERAL (PERFIL, POMODORO Y ESTADÍSTICAS) ---
+# --- PANEL LATERAL (PERFIL FEMENINO AESTHETIC & MÉTRICAS) ---
 with st.sidebar:
+    # Avatar femenino ilustrado (estilo Lorelei con cabello largo y colores pastel)
+    avatar_url = "https://api.dicebear.com/7.x/lorelei/svg?seed=Aria&backgroundColor=f8e8ee&hair=variant09&eyes=variant04&mouth=happy01"
+    
     st.markdown(
-        '<div style="text-align: center; padding-top: 10px;">'
-        '<img src="https://api.dicebear.com/7.x/notionists/svg?seed=Ximena&backgroundColor=e2e8f0" width="110" style="border-radius: 50%; border: 4px solid #00d2ff;">'
-        '<h2 style="margin-top: 12px; margin-bottom: 2px;">Dra. Ximena</h2>'
-        '<p style="color: #94a3b8; font-weight: 600; font-size: 0.9rem;">Medicina • Panel Personal 🩺</p>'
-        '</div>',
+        f'<div class="profile-card">'
+        f'<img src="{avatar_url}" class="profile-avatar">'
+        f'<h2 style="margin-top: 14px; margin-bottom: 2px; font-size: 1.6rem;">Ximena</h2>'
+        f'<p style="color: #d48c9e; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.5px; margin: 0;">Medical Student • Studio</p>'
+        f'</div>',
         unsafe_allow_html=True
     )
     
-    st.info(random.choice(frases_ximena))
+    st.markdown(f'<div class="quote-box">{random.choice(frases_ximena)}</div>', unsafe_allow_html=True)
     
-    # CONEXIÓN CON API KEY (CAJA FUERTE O MANUAL)
+    # CONEXIÓN CON API KEY
     if "GOOGLE_API_KEY" in st.secrets:
         api_key = st.secrets["GOOGLE_API_KEY"]
-        st.caption("🟢 Motor de IA: Conectado y listo")
+        st.markdown('<p style="font-size: 0.8rem; opacity: 0.75; text-align: center;"><span class="status-dot"></span>Motor de Inteligencia Artificial Activo</p>', unsafe_allow_html=True)
     else:
-        api_key = st.text_input("🔑 Google API Key:", type="password")
-        st.caption("⚠️ Configura Secrets en Streamlit para ocultarlo.")
+        api_key = st.text_input("Clave de Acceso (API Key):", type="password")
+        st.caption("Configura Secrets en la nube para acceso directo.")
 
     st.markdown("---")
     
     # MÉTRICAS DEL DÍA
-    st.subheader("📊 Tu Sesión de Hoy")
+    st.markdown("<p style='font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; font-weight: 700;'>Registro de Estudio</p>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
-        st.metric("Decks Guardados", len(cargar_historial()))
+        st.metric("Colecciones", len(cargar_historial()))
     with c2:
-        st.metric("Practicadas Hoy", st.session_state.total_respondidas_hoy)
+        st.metric("Reactivos Hoy", st.session_state.total_respondidas_hoy)
 
-    # RELOJ POMODORO RÁPIDO
-    with st.expander("⏱️ Modo Concentración (Pomodoro)"):
-        st.write("Estudia en bloques de 25 min sin ver el celular y descansa 5 min.")
-        min_pomo = st.selectbox("Duración del bloque:", [25, 45, 15], index=0)
-        if st.button("🔔 Iniciar Bloque ahora", use_container_width=True):
-            st.toast(f"¡Reloj iniciado! Concéntrate durante {min_pomo} minutos, Ximena. 🩺", icon="⏱️")
+    # TEMPORIZADOR POMODORO
+    with st.expander("Temporizador Pomodoro"):
+        st.caption("Sesiones de enfoque profundo sin distracciones.")
+        min_pomo = st.selectbox("Minutos por bloque:", [25, 45, 15], index=0)
+        if st.button("Iniciar Sesión de Enfoque", use_container_width=True):
+            st.toast(f"Sesión iniciada: {min_pomo} minutos de enfoque continuo.")
 
     if st.session_state.quiz:
         st.markdown("---")
-        st.subheader("🎯 Examen en Curso")
+        st.markdown("<p style='font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; font-weight: 700;'>Progreso Actual</p>", unsafe_allow_html=True)
         html_score = (
-            f'<div style="background-color: var(--secondary-background-color); padding: 15px; border-radius: 16px; text-align: center; border: 1px solid #00d2ff;">'
-            f'<h1 style="color: #00d2ff; margin: 0; font-size: 2.6rem;">{st.session_state.puntaje} / {len(st.session_state.quiz)}</h1>'
-            f'<p style="margin: 0; font-weight: bold;">Aciertos Actuales</p></div>'
+            f'<div style="background-color: var(--secondary-background-color); padding: 18px; border-radius: 16px; text-align: center; border: 1px solid rgba(212, 140, 158, 0.35);">'
+            f'<h1 style="color: #d48c9e; margin: 0; font-size: 2.5rem;">{st.session_state.puntaje} / {len(st.session_state.quiz)}</h1>'
+            f'<p style="margin: 4px 0 0 0; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; opacity: 0.7;">Respuestas Correctas</p></div>'
         )
         st.markdown(html_score, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("🏠 Salir al Menú Principal", use_container_width=True):
+        if st.button("Finalizar y Volver al Inicio", use_container_width=True):
             reiniciar_todo()
             st.rerun()
 
@@ -278,33 +389,43 @@ with st.sidebar:
 # =====================================================================
 if not st.session_state.quiz:
     st.markdown(
-        '<div class="hero-banner">'
-        '<h1>MedTutor AI Pro 🩺</h1>'
-        '<p>Estudio inteligente, simulador de casos clínicos, visión anatómica y resúmenes médicos para Ximena</p>'
+        '<div class="hero-container">'
+        '<span class="hero-tag">Medical Study Atelier</span>'
+        '<h1>MedTutor Studio</h1>'
+        '<p>Espacio privado de entrenamiento clínico, análisis visual anatómico y síntesis médica diseñado para Ximena.</p>'
         '</div>',
         unsafe_allow_html=True
     )
     
     tab_pdf, tab_imagen, tab_guardados, tab_consulta = st.tabs([
-        "📄 Apuntes y Presentaciones (PDF)",
-        "👁️ Laboratorio Visual (Anatomía)",
-        "📁 Mi Bóveda de Decks",
-        "💬 Tutor Médico 24/7"
+        "Presentaciones y Lecturas",
+        "Atlas y Laboratorio Visual",
+        "Biblioteca Guardada",
+        "Consultorio Académico"
     ])
     
     # -----------------------------------------------------------------
     # PESTAÑA 1: DOCUMENTOS PDF + RESUMEN EXPRESS + CONFIGURADOR DE QUIZ
     # -----------------------------------------------------------------
     with tab_pdf:
+        st.markdown(
+            '<div class="feature-card">'
+            '<img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80" class="feature-card-img">'
+            '<div class="feature-card-body">'
+            '<p class="feature-card-title">Estudio por Capítulos y Diapositivas</p>'
+            '<p class="feature-card-sub">Carga tus presentaciones o capítulos en PDF para desglosar el temario, crear exámenes clínicos o generar hojas de repaso.</p>'
+            '</div></div>',
+            unsafe_allow_html=True
+        )
+
         if not st.session_state.texto_pdf:
-            st.write("### 📖 Sube la presentación del doctor o el capítulo del libro")
-            archivo_subido = st.file_uploader("Arrastra aquí tu archivo PDF", type=["pdf"], key="pdf_uploader")
+            archivo_subido = st.file_uploader("Selecciona o arrastra tu documento PDF", type=["pdf"], key="pdf_uploader")
             if archivo_subido is not None:
-                if st.button("🔍 Analizar Documento y Extraer Temario", type="primary", use_container_width=True):
+                if st.button("Analizar Documento y Extraer Índice", type="primary", use_container_width=True):
                     if not api_key:
-                        st.error("⚠️ Falta configurar la API Key.")
+                        st.error("Es necesario configurar la clave de acceso en el panel lateral.")
                     else:
-                        with st.spinner("🤖 Analizando diapositivas y armando tu plan de estudio..."):
+                        with st.spinner("Analizando el contenido académico del documento..."):
                             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
                                 tmp.write(archivo_subido.read())
                                 tmp_path = tmp.name
@@ -322,32 +443,32 @@ if not st.session_state.quiz:
                                 st.session_state.lista_temas = cadena_temas.invoke({"texto": st.session_state.texto_pdf}).temas
                                 st.rerun()
                             except Exception as e:
-                                st.error(f"Hubo un detalle al leer el PDF: {e}")
+                                st.error(f"No se pudo procesar el archivo: {e}")
                             finally:
                                 os.unlink(tmp_path)
         else:
-            st.success("✅ ¡Documento cargado en memoria! Configura tu sesión de estudio:")
+            st.success("Documento procesado. Configura los parámetros de tu sesión:")
             
             with st.container(border=True):
-                tema_elegido = st.selectbox("📌 1. Elige el subtema que quieres dominar ahorita:", ["🌟 Todos los temas del documento"] + st.session_state.lista_temas)
+                tema_elegido = st.selectbox("1. Módulo o capítulo a estudiar:", ["Documento Completo (Todos los temas)"] + st.session_state.lista_temas)
                 
                 col_cfg1, col_cfg2 = st.columns(2)
                 with col_cfg1:
-                    num_preguntas = st.select_slider("🔢 2. ¿Cuántas preguntas quieres?", options=[5, 10, 15], value=10)
+                    num_preguntas = st.select_slider("2. Extensión de la evaluación:", options=[5, 10, 15], value=10)
                 with col_cfg2:
                     estilo_quiz = st.selectbox(
-                        "🩺 3. Estilo del Examen:",
+                        "3. Enfoque pedagógico:",
                         [
-                            "Mixto (Memoria + Casos Clínicos)",
-                            "100% Casos Clínicos (Tipo Hospital / ENARM)",
-                            "Conceptos Clave y Definiciones Directas"
+                            "Balanceado (Conceptos + Viñetas Clínicas)",
+                            "Casos Clínicos (Formato Hospitalario / ENARM)",
+                            "Fundamentos Teóricos y Definiciones"
                         ]
                     )
                 
                 col_btn1, col_btn2 = st.columns(2)
                 with col_btn1:
-                    if st.button(f"⚡ Crear Examen ({num_preguntas} preguntas)", type="primary", use_container_width=True):
-                        with st.spinner(f"Diseñando {num_preguntas} preguntas estilo '{estilo_quiz}'..."):
+                    if st.button(f"Generar Evaluación ({num_preguntas} Reactivos)", type="primary", use_container_width=True):
+                        with st.spinner(f"Elaborando {num_preguntas} reactivos médicos..."):
                             try:
                                 llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.3, google_api_key=api_key)
                                 prompt_quiz = PromptTemplate(
@@ -378,37 +499,37 @@ if not st.session_state.quiz:
                                 guardar_en_historial(tema_elegido, quiz_generado)
                                 st.rerun()
                             except Exception as e:
-                                st.error(f"Error al generar el examen: {e}")
+                                st.error(f"Error al generar la evaluación: {e}")
                 
                 with col_btn2:
-                    if st.button("📝 Generar Hoja de Repaso Express (Cheat Sheet)", use_container_width=True):
-                        with st.spinner("Sintetizando perlas clínicas y puntos clave..."):
+                    if st.button("Crear Hoja de Síntesis (Cheat Sheet)", use_container_width=True):
+                        with st.spinner("Sintetizando conceptos clave y perlas clínicas..."):
                             try:
                                 llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.2, google_api_key=api_key)
                                 prompt_resumen = (
-                                    f"Eres un tutor médico. Crea una 'Hoja de Repaso Express' súper clara y visual en Markdown sobre '{tema_elegido}' "
-                                    f"basada en este documento. Incluye:\n"
-                                    f"1. 🎯 Conceptos Clave que siempre preguntan en exámenes\n"
-                                    f"2. 🧠 2 Mnemotecnias para memorizar lo más difícil\n"
-                                    f"3. 🚨 Banderas Rojas / Datos Clínicos Críticos\n"
-                                    f"4. 📊 Tabla comparativa (si aplica).\n\nDocumento:\n{st.session_state.texto_pdf}"
+                                    f"Eres un tutor médico. Crea una 'Hoja de Repaso Académica' limpia, elegante y estructurada en Markdown sobre '{tema_elegido}' "
+                                    f"basada en este documento. No uses emojis excesivos. Incluye:\n"
+                                    f"1. Conceptos Esenciales de Examen\n"
+                                    f"2. Dos Mnemotecnias para recordar datos complejos\n"
+                                    f"3. Datos Clínicos Críticos (Red Flags)\n"
+                                    f"4. Tabla comparativa de síntesis.\n\nDocumento:\n{st.session_state.texto_pdf}"
                                 )
                                 respuesta_res = llm.invoke(prompt_resumen)
                                 st.session_state.resumen_express = respuesta_res.content
                             except Exception as e:
-                                st.error(f"Error al crear resumen: {e}")
+                                st.error(f"Error al crear síntesis: {e}")
 
             if st.session_state.resumen_express:
-                with st.expander("📋 Ver tu Hoja de Repaso Express (Cheat Sheet)", expanded=True):
+                with st.expander("Lectura de Síntesis (Cheat Sheet)", expanded=True):
                     st.markdown(st.session_state.resumen_express)
                     st.download_button(
-                        "📥 Descargar Resumen en el iPad (.md)",
+                        "Descargar Hoja de Síntesis (.md)",
                         data=st.session_state.resumen_express,
-                        file_name=f"Resumen_{tema_elegido.replace(' ', '_')}.md",
+                        file_name=f"Sintesis_{tema_elegido.replace(' ', '_')}.md",
                         mime="text/markdown"
                     )
 
-            if st.button("🗑️ Subir un PDF diferente"):
+            if st.button("Cambiar Documento PDF"):
                 reiniciar_todo()
                 st.rerun()
 
@@ -416,28 +537,37 @@ if not st.session_state.quiz:
     # PESTAÑA 2: MODO VISIÓN ANATÓMICA E HISTOLOGÍA
     # -----------------------------------------------------------------
     with tab_imagen:
-        st.write("### 🧠 Sube un esquema de Anatomía, Histología, Fisiología o foto de tu iPad")
-        archivo_img = st.file_uploader("Sube una captura (JPG, PNG)", type=["jpg", "jpeg", "png"])
+        st.markdown(
+            '<div class="feature-card">'
+            '<img src="https://images.unsplash.com/photo-1579154204601-01588f351e67?auto=format&fit=crop&w=1200&q=80" class="feature-card-img">'
+            '<div class="feature-card-body">'
+            '<p class="feature-card-title">Reconocimiento Visual de Anatomía e Histología</p>'
+            '<p class="feature-card-sub">Sube esquemas del atlas, cortes histológicos o capturas de tus apuntes en iPad para evaluar identificación estructural y correlación clínica.</p>'
+            '</div></div>',
+            unsafe_allow_html=True
+        )
+
+        archivo_img = st.file_uploader("Selecciona una imagen o esquema (JPG, PNG)", type=["jpg", "jpeg", "png"])
         if archivo_img is not None:
             col_im1, col_im2 = st.columns([1, 1])
             with col_im1:
-                st.image(archivo_img, caption="Imagen cargada", use_container_width=True)
+                st.image(archivo_img, caption="Lámina de estudio", use_container_width=True)
             with col_im2:
-                st.write("#### Configura tu análisis visual:")
-                num_preg_img = st.select_slider("Cantidad de preguntas visuales:", options=[5, 8, 10], value=5)
+                st.markdown("#### Parámetros de Evaluación Visual")
+                num_preg_img = st.select_slider("Número de reactivos:", options=[5, 8, 10], value=5)
                 enfoque_img = st.radio(
-                    "¿Qué quieres que evalúe la IA?",
+                    "Enfoque del análisis:",
                     [
                         "Identificación anatómica y relaciones espaciales",
-                        "Fisiología / Función de las estructuras mostradas",
-                        "Correlación clínica (¿Qué pasa si se lesiona algo de aquí?)"
+                        "Fisiología y función de las estructuras visibles",
+                        "Correlación clínica y patología asociada"
                     ]
                 )
-                if st.button("👁️ Generar Examen Visual", type="primary", use_container_width=True):
+                if st.button("Generar Evaluación Visual", type="primary", use_container_width=True):
                     if not api_key:
-                        st.error("⚠️ Falta la API Key.")
+                        st.error("Configura primero la clave de acceso.")
                     else:
-                        with st.spinner("Escaneando estructuras médicas de tu imagen..."):
+                        with st.spinner("Analizando estructuras médicas en la imagen..."):
                             encoded_img = base64.b64encode(archivo_img.read()).decode('utf-8')
                             llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.3, google_api_key=api_key)
                             mensaje = HumanMessage(content=[
@@ -457,29 +587,38 @@ if not st.session_state.quiz:
                                 quiz_generado = [p.dict() for p in resultado_quiz.preguntas]
                                 st.session_state.quiz = quiz_generado
                                 st.session_state.errores_quiz = []
-                                st.session_state.tema_actual = "Anatomía / Imagen Médica"
+                                st.session_state.tema_actual = "Evaluación Visual Anatómica"
                                 st.session_state.indice_actual = 0
                                 st.session_state.puntaje = 0
-                                guardar_en_historial("Anatomía Visual", quiz_generado)
+                                guardar_en_historial("Evaluación Visual", quiz_generado)
                                 st.rerun()
                             except Exception as e:
-                                st.error(f"Error al analizar imagen: {e}")
+                                st.error(f"Error al analizar la imagen: {e}")
 
     # -----------------------------------------------------------------
     # PESTAÑA 3: BÓVEDA DE DECKS GUARDADOS + RESPALDO PORTÁTIL
     # -----------------------------------------------------------------
     with tab_guardados:
-        st.write("### 🗃️ Tu Biblioteca de Exámenes Guardados")
+        st.markdown(
+            '<div class="feature-card">'
+            '<img src="https://images.unsplash.com/photo-1507842229356-51c61504d3ab?auto=format&fit=crop&w=1200&q=80" class="feature-card-img">'
+            '<div class="feature-card-body">'
+            '<p class="feature-card-title">Archivo Personal de Evaluaciones</p>'
+            '<p class="feature-card-sub">Repasa colecciones anteriores sin necesidad de volver a procesar los documentos originales.</p>'
+            '</div></div>',
+            unsafe_allow_html=True
+        )
+
         historial = cargar_historial()
         if not historial:
-            st.info("💡 Todavía no tienes exámenes guardados. Cuando generes uno en PDF o Visión, se guardará aquí solito.")
+            st.info("Tu biblioteca está vacía por ahora. Las evaluaciones que generes se archivarán automáticamente aquí.")
         else:
             with st.container(border=True):
-                deck_elegido = st.selectbox("Selecciona un examen guardado para volver a practicar:", list(historial.keys()))
-                st.caption(f"Contiene {len(historial[deck_elegido])} preguntas listas.")
+                deck_elegido = st.selectbox("Selecciona una colección archivada:", list(historial.keys()))
+                st.caption(f"Contiene {len(historial[deck_elegido])} reactivos guardados.")
                 col_jugar, col_borrar = st.columns(2)
                 with col_jugar:
-                    if st.button("▶️ Practicar este Deck", type="primary", use_container_width=True):
+                    if st.button("Iniciar Práctica", type="primary", use_container_width=True):
                         st.session_state.quiz = historial[deck_elegido]
                         st.session_state.errores_quiz = []
                         st.session_state.tema_actual = deck_elegido
@@ -487,66 +626,77 @@ if not st.session_state.quiz:
                         st.session_state.puntaje = 0
                         st.rerun()
                 with col_borrar:
-                    if st.button("🗑️ Eliminar de la Bóveda", use_container_width=True):
+                    if st.button("Eliminar Colección", use_container_width=True):
                         borrar_del_historial(deck_elegido)
-                        st.toast("Deck eliminado", icon="🗑️")
+                        st.toast("Colección eliminada del archivo.")
                         time.sleep(0.5)
                         st.rerun()
 
-        # SISTEMA DE RESPALDO PARA NO PERDER NADA EN LA NUBE
-        with st.expander("☁️ Respaldo Portátil (Guardar o Restaurar tus Decks en tu iPad)"):
-            st.caption("Descarga tu copia de seguridad por si el servidor en la nube se reinicia:")
+        with st.expander("Respaldo Portátil de Biblioteca (Exportar / Importar)"):
+            st.caption("Guarda una copia de seguridad de tus colecciones en tu iPad o restaura un archivo previo:")
             if historial:
                 json_backup = json.dumps(historial, ensure_ascii=False, indent=4)
                 st.download_button(
-                    "💾 Descargar todos mis Decks (.json)",
+                    "Descargar Archivo de Respaldo (.json)",
                     data=json_backup,
-                    file_name="Respaldo_Decks_Ximena.json",
+                    file_name="Colecciones_Ximena.json",
                     mime="application/json",
                     use_container_width=True
                 )
-            archivo_respaldo = st.file_uploader("Restaurar un respaldo guardado (.json):", type=["json"])
+            archivo_respaldo = st.file_uploader("Cargar archivo de respaldo (.json):", type=["json"])
             if archivo_respaldo is not None:
-                if st.button("🔄 Restaurar Decks Ahora"):
+                if st.button("Restaurar Colecciones"):
                     datos_subidos = json.load(archivo_respaldo)
                     historial_actual = cargar_historial()
                     historial_actual.update(datos_subidos)
                     with open(ARCHIVO_BD, "w", encoding="utf-8") as f:
                         json.dump(historial_actual, f, ensure_ascii=False, indent=4)
-                    st.success("¡Decks restaurados con éxito!")
+                    st.success("Colecciones restauradas correctamente.")
                     st.rerun()
 
     # -----------------------------------------------------------------
     # PESTAÑA 4: CONSULTORIO DE DUDAS RÁPIDAS (FEYNMAN / MNEMOTECNIAS)
     # -----------------------------------------------------------------
     with tab_consulta:
-        st.write("### 💬 Pregúntale lo que sea a tu Tutor Médico")
-        st.caption("¿Un concepto de fisiología, bioquímica o anatomía no te queda claro? Escríbelo aquí:")
-        duda_ximena = st.text_input("Ejemplo: 'No entiendo el potencial de acción cardíaco' o 'Hazme una mnemotecnia para las ramas de la arteria maxilar'")
+        st.markdown(
+            '<div class="feature-card">'
+            '<img src="https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1200&q=80" class="feature-card-img">'
+            '<div class="feature-card-body">'
+            '<p class="feature-card-title">Tutoría Académica Instantánea</p>'
+            '<p class="feature-card-sub">Despeja dudas puntuales de fisiología, anatomía, histología o farmacología con explicaciones adaptadas a tu estilo.</p>'
+            '</div></div>',
+            unsafe_allow_html=True
+        )
+
+        duda_ximena = st.text_input("Escribe el concepto o tema que deseas comprender:")
         modo_explicacion = st.radio(
-            "¿Cómo quieres la respuesta?",
-            ["👶 Súper fácil con analogías (Método Feynman)", "🧠 Mnemotecnia creativa e inolvidable", "🩺 Explicación clínica de examen"],
+            "Modalidad de explicación:",
+            [
+                "Explicación Sencilla con Analogías (Método Feynman)",
+                "Regla Mnemotécnica para Memorización",
+                "Resumen Clínico Riguroso"
+            ],
             horizontal=True
         )
-        if st.button("✨ Resolver mi duda", type="primary"):
+        if st.button("Consultar al Tutor", type="primary"):
             if duda_ximena and api_key:
-                with st.spinner("Pensando la mejor explicación para ti..."):
+                with st.spinner("Elaborando explicación..."):
                     llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.4, google_api_key=api_key)
                     resp = llm.invoke(
-                        f"Eres el tutor personal de medicina de Ximena. Responde a su solicitud: '{duda_ximena}' "
-                        f"usando el estilo: {modo_explicacion}. Sé claro, cálido, estructurado y usa emojis médicos."
+                        f"Eres el tutor académico de medicina de Ximena. Responde a su consulta: '{duda_ximena}' "
+                        f"utilizando el enfoque: {modo_explicacion}. Mantén un tono elegante, claro, didáctico y libre de emojis."
                     )
                     st.markdown(f"<div class='ai-helper-box'>{resp.content}</div>", unsafe_allow_html=True)
 
 # =====================================================================
-# MODO EXAMEN ACTIVO (INTERFAZ INTERACTIVA CON SUPERPODERES)
+# MODO EXAMEN ACTIVO
 # =====================================================================
 else:
     total_preguntas = len(st.session_state.quiz)
     indice = st.session_state.indice_actual
     
-    st.markdown(f"<span class='pill-badge'>📚 {st.session_state.tema_actual}</span>", unsafe_allow_html=True)
-    st.progress(indice / total_preguntas, text=f"Pregunta {indice + 1} de {total_preguntas}")
+    st.markdown(f"<span class='pill-badge'>{st.session_state.tema_actual}</span>", unsafe_allow_html=True)
+    st.progress(indice / total_preguntas, text=f"Reactivo {indice + 1} de {total_preguntas}")
     
     if indice < total_preguntas:
         pregunta_actual = st.session_state.quiz[indice]
@@ -557,79 +707,80 @@ else:
             st.session_state.opciones_revueltas = opciones
 
         # TARJETA DE LA PREGUNTA
-        pregunta_html = f"<div class='pregunta-caja'><h2 style='margin:0; font-size:1.35rem; line-height:1.5;'>🩺 {pregunta_actual['pregunta']}</h2></div>"
+        pregunta_html = (
+            f"<div class='pregunta-caja'>"
+            f"<p style='font-size: 0.75rem; text-transform: uppercase; letter-spacing: 2px; color: #d48c9e; margin-bottom: 10px; font-weight: 700;'>Caso / Reactivo {indice + 1}</p>"
+            f"<h2 style='margin:0; font-size:1.45rem; line-height:1.5; font-weight: 600;'>{pregunta_actual['pregunta']}</h2>"
+            f"</div>"
+        )
         st.markdown(pregunta_html, unsafe_allow_html=True)
         
         opcion_seleccionada = st.radio(
-            "Selecciona la respuesta correcta:",
+            "Selecciona una respuesta:",
             st.session_state.opciones_revueltas,
             index=None,
             label_visibility="collapsed"
         )
         
         if not st.session_state.respuesta_revisada:
-            if st.button("✨ Comprobar Respuesta", use_container_width=True, type="primary"):
+            if st.button("Verificar Respuesta", use_container_width=True, type="primary"):
                 if opcion_seleccionada:
                     st.session_state.respuesta_revisada = True
                     st.rerun()
                 else:
-                    st.warning("☝️ Toca una de las opciones primero.")
+                    st.warning("Selecciona una de las opciones antes de verificar.")
         else:
-            # CALIFICACIÓN DE LA PREGUNTA
             es_correcta = (opcion_seleccionada == pregunta_actual["respuesta_correcta"])
             if es_correcta:
-                st.success("### ¡Excelente diagnóstico, Dra. Ximena! 🎉")
+                st.success(f"**Respuesta Correcta.** — {pregunta_actual['respuesta_correcta']}")
                 if st.session_state.bandera_puntaje:
                     st.session_state.puntaje += 1
                     st.session_state.total_respondidas_hoy += 1
-                    st.toast("¡Respuesta Correcta! +1 punto", icon="✅")
             else:
-                st.error(f"### Ups, esa no era ❌ (Elegiste: {opcion_seleccionada})")
-                st.info(f"💡 **Respuesta correcta:** {pregunta_actual['respuesta_correcta']}")
+                st.error(f"**Respuesta Incorrecta.** Seleccionaste: {opcion_seleccionada}")
+                st.info(f"**Opción Correcta:** {pregunta_actual['respuesta_correcta']}")
                 if st.session_state.bandera_puntaje:
                     st.session_state.total_respondidas_hoy += 1
                     if pregunta_actual not in st.session_state.errores_quiz:
                         st.session_state.errores_quiz.append(pregunta_actual)
-                    st.toast("Guardada para repaso de errores", icon="📌")
             
             st.session_state.bandera_puntaje = False
 
-            # EXPLICACIÓN CLÍNICA BASE
-            with st.expander("📖 Explicación Médica Detallada", expanded=True):
+            with st.expander("Fundamento Médico y Justificación", expanded=True):
                 st.write(pregunta_actual["explicacion"])
             
-            # --- SUPERPODERES EN VIVO: FEYNMAN Y MNEMOTECNIA ---
-            st.caption("¿Sigue confuso o difícil de memorizar? Usa tus herramientas mágicas:")
+            # HERRAMIENTAS DE APOYO EN VIVO
+            st.caption("Herramientas de profundización:")
             col_help1, col_help2 = st.columns(2)
             with col_help1:
-                if st.button("👶 Explícamelo Súper Fácil (Feynman)", use_container_width=True):
-                    with st.spinner("Traduciendo a lenguaje súper sencillo..."):
+                if st.button("Explicar con Analogía Sencilla (Feynman)", use_container_width=True):
+                    with st.spinner("Generando analogía didáctica..."):
                         llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.4, google_api_key=api_key)
                         prompt_f = (
-                            f"Explica este concepto médico a Ximena como si tuviera 12 años, usando una analogía de la vida real "
-                            f"súper fácil de imaginar.\nPregunta: {pregunta_actual['pregunta']}\n"
+                            f"Explica este concepto médico a Ximena de manera sumamente clara usando una analogía cotidiana. "
+                            f"No uses emojis.\nPregunta: {pregunta_actual['pregunta']}\n"
                             f"Respuesta correcta: {pregunta_actual['respuesta_correcta']}\n"
                             f"Contexto: {pregunta_actual['explicacion']}"
                         )
                         st.session_state.feynman_actual = llm.invoke(prompt_f).content
             with col_help2:
-                if st.button("🧠 Créame una Mnemotecnia", use_container_width=True):
-                    with st.spinner("Inventando truco de memoria..."):
+                if st.button("Generar Mnemotecnia de Memoria", use_container_width=True):
+                    with st.spinner("Creando recurso mnemotécnico..."):
                         llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.6, google_api_key=api_key)
                         prompt_m = (
-                            f"Crea una mnemotecnia corta, divertida o un acrónimo ingenioso en español para que Ximena jamás olvide "
+                            f"Crea una mnemotecnia corta, elegante o un acrónimo ingenioso en español (sin emojis) para que Ximena recuerde siempre "
                             f"que la respuesta a '{pregunta_actual['pregunta']}' es '{pregunta_actual['respuesta_correcta']}'. "
                             f"Explicación: {pregunta_actual['explicacion']}"
                         )
                         st.session_state.mnemo_actual = llm.invoke(prompt_m).content
 
             if st.session_state.feynman_actual:
-                st.markdown(f"<div class='ai-helper-box'><b>👶 Explicación Feynman:</b><br>{st.session_state.feynman_actual}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='ai-helper-box'><b>Analogía Didáctica (Método Feynman)</b><br><br>{st.session_state.feynman_actual}</div>", unsafe_allow_html=True)
             if st.session_state.mnemo_actual:
-                st.markdown(f"<div class='ai-helper-box'><b>🧠 Truco de Memoria:</b><br>{st.session_state.mnemo_actual}</div>", unsafe_allow_html=True)
+                st.markdown(f"<div class='ai-helper-box'><b>Recurso Mnemotécnico</b><br><br>{st.session_state.mnemo_actual}</div>", unsafe_allow_html=True)
 
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Siguiente Pregunta ➡️", use_container_width=True, type="primary"):
+            if st.button("Siguiente Reactivo", use_container_width=True, type="primary"):
                 st.session_state.indice_actual += 1
                 st.session_state.respuesta_revisada = False
                 st.session_state.opciones_revueltas = []
@@ -639,45 +790,42 @@ else:
                 
     else:
         # =================================================================
-        # PANTALLA FINAL DE RESULTADOS Y REPASO DE ERRORES
+        # PANTALLA FINAL DE RESULTADOS
         # =================================================================
-        st.balloons()
         porcentaje = int((st.session_state.puntaje / total_preguntas) * 100)
         
         if porcentaje == 100:
-            mensaje_final = "¡Perfección absoluta, futura especialista! Dominas este tema al 100%. 🏆"
+            mensaje_final = "Dominio sobresaliente del módulo. Precisión del 100%."
         elif porcentaje >= 80:
-            mensaje_final = "¡Excelente nivel clínico! Estás más que lista para el examen. 🌟"
+            mensaje_final = "Excelente desempeño clínico. El tema está bien consolidado."
         else:
-            mensaje_final = "¡Buen entrenamiento! Repasemos las que fallaron para blindar el tema. 💪"
+            mensaje_final = "Sesión completada. Se recomienda repasar los reactivos marcados para reforzar."
 
         html_victoria = (
-            f'<div style="text-align: center; padding: 35px; background-color: var(--secondary-background-color); border-radius: 24px; border: 2px solid #00d2ff;">'
-            f'<h1 style="font-size: 3.5rem; margin: 0;">🎓 {porcentaje}%</h1>'
-            f'<h2 style="margin: 10px 0;">Obtuviste {st.session_state.puntaje} de {total_preguntas} aciertos</h2>'
-            f'<p style="font-size: 1.15rem; color: #94a3b8;">{mensaje_final}</p>'
+            f'<div style="text-align: center; padding: 45px 30px; background-color: var(--secondary-background-color); border-radius: 24px; border: 1px solid rgba(212, 140, 158, 0.45); margin-bottom: 24px;">'
+            f'<span class="pill-badge">Sesión Finalizada</span>'
+            f'<h1 style="font-size: 4rem; margin: 6px 0; color: #d48c9e;">{porcentaje}%</h1>'
+            f'<h3 style="margin: 8px 0; font-weight: 600;">Puntaje obtenido: {st.session_state.puntaje} de {total_preguntas} aciertos</h3>'
+            f'<p style="font-size: 1.05rem; opacity: 0.75; max-width: 500px; margin: 10px auto 0 auto;">{mensaje_final}</p>'
             f'</div>'
         )
         st.markdown(html_victoria, unsafe_allow_html=True)
-        st.markdown("<br>", unsafe_allow_html=True)
         
-        # BOTÓN ESPECIAL SI TUVO ERRORES: REPASAR SOLO LAS FALLADAS
         num_errores = len(st.session_state.errores_quiz)
         if num_errores > 0:
-            if st.button(f"🔥 Repasar AHORA solo las {num_errores} preguntas que fallé", type="primary", use_container_width=True):
+            if st.button(f"Repasar únicamente los {num_errores} reactivos incorrectos", type="primary", use_container_width=True):
                 st.session_state.quiz = st.session_state.errores_quiz.copy()
                 st.session_state.errores_quiz = []
                 st.session_state.indice_actual = 0
                 st.session_state.puntaje = 0
                 st.session_state.respuesta_revisada = False
                 st.session_state.bandera_puntaje = True
-                st.session_state.tema_actual = f"Repaso de Errores: {st.session_state.tema_actual}"
+                st.session_state.tema_actual = f"Repaso Selectivo: {st.session_state.tema_actual}"
                 st.rerun()
 
-        # EXPORTAR A ANKI
         csv_anki = generar_csv_anki(st.session_state.quiz)
         st.download_button(
-            label="📥 Descargar este Deck para Anki (.CSV)",
+            label="Exportar Colección para Anki (.CSV)",
             data=csv_anki,
             file_name=f"Anki_{st.session_state.tema_actual[:20].replace(' ', '_')}.csv",
             mime="text/csv",
@@ -686,7 +834,7 @@ else:
         
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("🔁 Repetir todo este bloque", use_container_width=True):
+            if st.button("Repetir Evaluación Completa", use_container_width=True):
                 st.session_state.indice_actual = 0
                 st.session_state.puntaje = 0
                 st.session_state.errores_quiz = []
@@ -694,6 +842,6 @@ else:
                 st.session_state.bandera_puntaje = True
                 st.rerun()
         with col2:
-            if st.button("🏠 Volver al Centro de Estudio", use_container_width=True):
+            if st.button("Volver al Inicio", use_container_width=True):
                 reiniciar_todo()
                 st.rerun()
