@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- DISEÑO UI/UX AESTHETIC, MINIMALISTA Y EDITORIAL (CERO EMOJIS) ---
+# --- DISEÑO UI/UX AESTHETIC, MINIMALISTA Y EDITORIAL ---
 css = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
@@ -121,17 +121,6 @@ h1, h2, .serif-title {
     margin-bottom: 24px;
 }
 
-/* Cajas de Explicación Feynman y Mnemotecnia */
-.ai-helper-box {
-    background: linear-gradient(135deg, rgba(212, 140, 158, 0.1) 0%, rgba(167, 139, 250, 0.08) 100%);
-    border: 1px solid rgba(212, 140, 158, 0.35);
-    padding: 24px;
-    border-radius: 18px;
-    margin-top: 14px;
-    margin-bottom: 14px;
-    line-height: 1.65;
-}
-
 /* Botones Estilizados */
 .stButton>button {
     border-radius: 14px;
@@ -187,24 +176,25 @@ div[role="radiogroup"] > label:hover {
     margin-bottom: 12px;
 }
 
-/* Perfil Lateral */
+/* Perfil Lateral con Foto Real */
 .profile-card {
     text-align: center;
     padding: 24px 16px;
-    background: linear-gradient(180deg, rgba(212, 140, 158, 0.12) 0%, rgba(255, 255, 255, 0.01) 100%);
+    background: linear-gradient(180deg, rgba(212, 140, 158, 0.14) 0%, rgba(255, 255, 255, 0.01) 100%);
     border-radius: 22px;
-    border: 1px solid rgba(212, 140, 158, 0.2);
+    border: 1px solid rgba(212, 140, 158, 0.25);
     margin-bottom: 18px;
 }
 .profile-avatar {
-    width: 115px;
-    height: 115px;
+    width: 130px;
+    height: 130px;
     border-radius: 50%;
     object-fit: cover;
+    object-position: center 55%;
     border: 3px solid #d48c9e;
     padding: 3px;
     background: white;
-    box-shadow: 0 8px 20px rgba(212, 140, 158, 0.25);
+    box-shadow: 0 10px 25px rgba(212, 140, 158, 0.3);
 }
 .quote-box {
     font-family: 'Cormorant Garamond', serif;
@@ -229,6 +219,35 @@ div[role="radiogroup"] > label:hover {
 </style>
 """
 st.markdown(css, unsafe_allow_html=True)
+
+# --- FUNCIÓN PARA CARGAR LA FOTO DE XIMENA ---
+def obtener_foto_perfil():
+    posibles_nombres = [
+        "ximena.jpg",
+        "ximena.jpeg",
+        "ximena.png",
+        "WhatsApp Image 2026-10-14 at 22.42.15.jpeg"
+    ]
+    for nombre in posibles_nombres:
+        if os.path.exists(nombre):
+            with open(nombre, "rb") as f:
+                encoded = base64.b64encode(f.read()).decode("utf-8")
+                return f"data:image/jpeg;base64,{encoded}"
+    # Respaldo femenino ilustrado si aún no se sube el archivo
+    return "https://api.dicebear.com/7.x/lorelei/svg?seed=Aria&backgroundColor=f8e8ee&hair=variant09&eyes=variant04&mouth=happy01"
+
+# --- FUNCIÓN PARA LIMPIAR RESPUESTAS DE LA IA (EVITA TEXTOS RAROS EN ANALOGÍAS) ---
+def extraer_texto_limpio(respuesta_ia):
+    contenido = respuesta_ia.content if hasattr(respuesta_ia, "content") else respuesta_ia
+    if isinstance(contenido, list):
+        partes = []
+        for item in contenido:
+            if isinstance(item, dict) and "text" in item:
+                partes.append(item["text"])
+            elif isinstance(item, str):
+                partes.append(item)
+        return "\n".join(partes).strip()
+    return str(contenido).strip()
 
 # --- SISTEMA DE BASE DE DATOS LOCAL ---
 ARCHIVO_BD = "base_datos_ximena.json"
@@ -329,15 +348,14 @@ frases_ximena = [
     "“Estudiar medicina es un arte; hoy estás más cerca de tu meta que ayer.”"
 ]
 
-# --- PANEL LATERAL (PERFIL FEMENINO AESTHETIC & MÉTRICAS) ---
+# --- PANEL LATERAL (CON LA FOTO DE XIMENA) ---
 with st.sidebar:
-    # Avatar femenino ilustrado (estilo Lorelei con cabello largo y colores pastel)
-    avatar_url = "https://api.dicebear.com/7.x/lorelei/svg?seed=Aria&backgroundColor=f8e8ee&hair=variant09&eyes=variant04&mouth=happy01"
+    avatar_src = obtener_foto_perfil()
     
     st.markdown(
         f'<div class="profile-card">'
-        f'<img src="{avatar_url}" class="profile-avatar">'
-        f'<h2 style="margin-top: 14px; margin-bottom: 2px; font-size: 1.6rem;">Ximena</h2>'
+        f'<img src="{avatar_src}" class="profile-avatar">'
+        f'<h2 style="margin-top: 14px; margin-bottom: 2px; font-size: 1.65rem;">Ximena</h2>'
         f'<p style="color: #d48c9e; font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.5px; margin: 0;">Medical Student • Studio</p>'
         f'</div>',
         unsafe_allow_html=True
@@ -508,14 +526,14 @@ if not st.session_state.quiz:
                                 llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.2, google_api_key=api_key)
                                 prompt_resumen = (
                                     f"Eres un tutor médico. Crea una 'Hoja de Repaso Académica' limpia, elegante y estructurada en Markdown sobre '{tema_elegido}' "
-                                    f"basada en este documento. No uses emojis excesivos. Incluye:\n"
+                                    f"basada en este documento. No uses emojis. Incluye:\n"
                                     f"1. Conceptos Esenciales de Examen\n"
                                     f"2. Dos Mnemotecnias para recordar datos complejos\n"
                                     f"3. Datos Clínicos Críticos (Red Flags)\n"
                                     f"4. Tabla comparativa de síntesis.\n\nDocumento:\n{st.session_state.texto_pdf}"
                                 )
                                 respuesta_res = llm.invoke(prompt_resumen)
-                                st.session_state.resumen_express = respuesta_res.content
+                                st.session_state.resumen_express = extraer_texto_limpio(respuesta_res)
                             except Exception as e:
                                 st.error(f"Error al crear síntesis: {e}")
 
@@ -583,7 +601,8 @@ if not st.session_state.quiz:
                             ])
                             try:
                                 respuesta = llm.invoke([mensaje])
-                                resultado_quiz = parser_quiz.parse(respuesta.content)
+                                texto_limpio = extraer_texto_limpio(respuesta)
+                                resultado_quiz = parser_quiz.parse(texto_limpio)
                                 quiz_generado = [p.dict() for p in resultado_quiz.preguntas]
                                 st.session_state.quiz = quiz_generado
                                 st.session_state.errores_quiz = []
@@ -655,7 +674,7 @@ if not st.session_state.quiz:
                     st.rerun()
 
     # -----------------------------------------------------------------
-    # PESTAÑA 4: CONSULTORIO DE DUDAS RÁPIDAS (FEYNMAN / MNEMOTECNIAS)
+    # PESTAÑA 4: CONSULTORIO DE DUDAS RÁPIDAS
     # -----------------------------------------------------------------
     with tab_consulta:
         st.markdown(
@@ -686,7 +705,8 @@ if not st.session_state.quiz:
                         f"Eres el tutor académico de medicina de Ximena. Responde a su consulta: '{duda_ximena}' "
                         f"utilizando el enfoque: {modo_explicacion}. Mantén un tono elegante, claro, didáctico y libre de emojis."
                     )
-                    st.markdown(f"<div class='ai-helper-box'>{resp.content}</div>", unsafe_allow_html=True)
+                    with st.container(border=True):
+                        st.markdown(extraer_texto_limpio(resp))
 
 # =====================================================================
 # MODO EXAMEN ACTIVO
@@ -749,7 +769,7 @@ else:
             with st.expander("Fundamento Médico y Justificación", expanded=True):
                 st.write(pregunta_actual["explicacion"])
             
-            # HERRAMIENTAS DE APOYO EN VIVO
+            # HERRAMIENTAS DE APOYO EN VIVO (LIMPIAS Y SIN ERRORES DE RENDERIZADO)
             st.caption("Herramientas de profundización:")
             col_help1, col_help2 = st.columns(2)
             with col_help1:
@@ -758,26 +778,33 @@ else:
                         llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.4, google_api_key=api_key)
                         prompt_f = (
                             f"Explica este concepto médico a Ximena de manera sumamente clara usando una analogía cotidiana. "
-                            f"No uses emojis.\nPregunta: {pregunta_actual['pregunta']}\n"
+                            f"Escribe en párrafos limpios, sin emojis y sin código HTML.\n"
+                            f"Pregunta: {pregunta_actual['pregunta']}\n"
                             f"Respuesta correcta: {pregunta_actual['respuesta_correcta']}\n"
                             f"Contexto: {pregunta_actual['explicacion']}"
                         )
-                        st.session_state.feynman_actual = llm.invoke(prompt_f).content
+                        resp_f = llm.invoke(prompt_f)
+                        st.session_state.feynman_actual = extraer_texto_limpio(resp_f)
             with col_help2:
                 if st.button("Generar Mnemotecnia de Memoria", use_container_width=True):
                     with st.spinner("Creando recurso mnemotécnico..."):
                         llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.6, google_api_key=api_key)
                         prompt_m = (
-                            f"Crea una mnemotecnia corta, elegante o un acrónimo ingenioso en español (sin emojis) para que Ximena recuerde siempre "
+                            f"Crea una mnemotecnia corta, elegante o un acrónimo ingenioso en español (sin emojis y sin HTML) para que Ximena recuerde siempre "
                             f"que la respuesta a '{pregunta_actual['pregunta']}' es '{pregunta_actual['respuesta_correcta']}'. "
                             f"Explicación: {pregunta_actual['explicacion']}"
                         )
-                        st.session_state.mnemo_actual = llm.invoke(prompt_m).content
+                        resp_m = llm.invoke(prompt_m)
+                        st.session_state.mnemo_actual = extraer_texto_limpio(resp_m)
 
             if st.session_state.feynman_actual:
-                st.markdown(f"<div class='ai-helper-box'><b>Analogía Didáctica (Método Feynman)</b><br><br>{st.session_state.feynman_actual}</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown("**Analogía Didáctica (Método Feynman)**")
+                    st.markdown(st.session_state.feynman_actual)
             if st.session_state.mnemo_actual:
-                st.markdown(f"<div class='ai-helper-box'><b>Recurso Mnemotécnico</b><br><br>{st.session_state.mnemo_actual}</div>", unsafe_allow_html=True)
+                with st.container(border=True):
+                    st.markdown("**Recurso Mnemotécnico**")
+                    st.markdown(st.session_state.mnemo_actual)
 
             st.markdown("<br>", unsafe_allow_html=True)
             if st.button("Siguiente Reactivo", use_container_width=True, type="primary"):
