@@ -23,6 +23,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# --- MODELO ACTIVO (Puedes usar "gemini-3.8-flash" o "gemini-1.5-pro") ---
+MODELO_IA = "gemini-3.8-flash"
+
 # --- DISEÑO UI/UX AESTHETIC, MINIMALISTA Y EDITORIAL ---
 css = """
 <style>
@@ -32,13 +35,11 @@ html, body, [class*="css"] {
     font-family: 'Plus Jakarta Sans', sans-serif;
 }
 
-/* Tipografía Editorial para Títulos */
 h1, h2, .serif-title {
     font-family: 'Cormorant Garamond', serif !important;
     letter-spacing: -0.3px;
 }
 
-/* Banner Principal con Imagen Aesthetic Superpuesta */
 .hero-container {
     position: relative;
     background-image: linear-gradient(120deg, rgba(30, 27, 36, 0.82) 0%, rgba(74, 58, 75, 0.72) 100%), url('https://images.unsplash.com/photo-1516549655169-df83a0774514?auto=format&fit=crop&w=1600&q=80');
@@ -82,7 +83,6 @@ h1, h2, .serif-title {
     font-weight: 400;
 }
 
-/* Tarjetas Visuales con Imagen de Cabecera */
 .feature-card {
     background: var(--secondary-background-color);
     border-radius: 20px;
@@ -111,7 +111,6 @@ h1, h2, .serif-title {
     margin: 0;
 }
 
-/* Tarjeta de Pregunta Minimalista */
 .pregunta-caja {
     background: var(--secondary-background-color);
     padding: 34px;
@@ -121,7 +120,6 @@ h1, h2, .serif-title {
     margin-bottom: 24px;
 }
 
-/* Botones Estilizados */
 .stButton>button {
     border-radius: 14px;
     font-weight: 600;
@@ -136,14 +134,12 @@ h1, h2, .serif-title {
     border-color: #d48c9e;
 }
 
-/* Botón Primario en Tono Rose-Mauve Aesthetic */
 button[kind="primary"] {
     background: linear-gradient(135deg, #c97a8e 0%, #9b72aa 100%) !important;
     color: white !important;
     border: none !important;
 }
 
-/* Opciones de Examen Táctiles */
 div[role="radiogroup"] > label {
     background: var(--secondary-background-color);
     padding: 18px 22px !important;
@@ -157,12 +153,10 @@ div[role="radiogroup"] > label:hover {
     background: rgba(212, 140, 158, 0.05);
 }
 
-/* Barra de progreso */
 .stProgress > div > div > div > div {
     background-image: linear-gradient(90deg, #d48c9e 0%, #9b72aa 100%);
 }
 
-/* Píldora de Categoría */
 .pill-badge {
     display: inline-block;
     background: rgba(212, 140, 158, 0.15);
@@ -176,7 +170,6 @@ div[role="radiogroup"] > label:hover {
     margin-bottom: 12px;
 }
 
-/* Perfil Lateral con Foto Real */
 .profile-card {
     text-align: center;
     padding: 24px 16px;
@@ -233,10 +226,8 @@ def obtener_foto_perfil():
             with open(nombre, "rb") as f:
                 encoded = base64.b64encode(f.read()).decode("utf-8")
                 return f"data:image/jpeg;base64,{encoded}"
-    # Respaldo femenino ilustrado si aún no se sube el archivo
     return "https://api.dicebear.com/7.x/lorelei/svg?seed=Aria&backgroundColor=f8e8ee&hair=variant09&eyes=variant04&mouth=happy01"
 
-# --- FUNCIÓN PARA LIMPIAR RESPUESTAS DE LA IA (EVITA TEXTOS RAROS EN ANALOGÍAS) ---
 def extraer_texto_limpio(respuesta_ia):
     contenido = respuesta_ia.content if hasattr(respuesta_ia, "content") else respuesta_ia
     if isinstance(contenido, list):
@@ -263,7 +254,7 @@ def cargar_historial():
 
 def guardar_en_historial(tema, quiz_data):
     historial = cargar_historial()
-    fecha = time.strftime('%d/%m %H:%M')
+    fecha = time.strftime('%d/%m %H:%M:%S')
     nombre_unico = f"{tema} ({fecha})"
     historial[nombre_unico] = quiz_data
     with open(ARCHIVO_BD, "w", encoding="utf-8") as f:
@@ -305,7 +296,9 @@ parser_quiz = PydanticOutputParser(pydantic_object=QuizMedico)
 # --- VARIABLES DE ESTADO ---
 defaults = {
     'texto_pdf': "",
+    'nombre_pdf': "",
     'lista_temas': [],
+    'preguntas_vistas': [],
     'quiz': [],
     'errores_quiz': [],
     'indice_actual': 0,
@@ -315,7 +308,7 @@ defaults = {
     'opciones_revueltas': [],
     'bandera_puntaje': True,
     'tema_actual': "",
-    'feynman_actual': "",
+    'estilo_actual': "Balanceado (Conceptos + Viñetas Clínicas)",
     'mnemo_actual': "",
     'resumen_express': ""
 }
@@ -323,22 +316,73 @@ for k, v in defaults.items():
     if k not in st.session_state:
         st.session_state[k] = v
 
-def reiniciar_todo():
-    st.session_state.texto_pdf = ""
-    st.session_state.lista_temas = []
+def salir_del_examen_sin_borrar_pdf():
+    """Sale al menú pero MANTIENE el PDF y los temas cargados para hacer más exámenes."""
     st.session_state.quiz = []
     st.session_state.errores_quiz = []
     st.session_state.indice_actual = 0
     st.session_state.puntaje = 0
     st.session_state.respuesta_revisada = False
     st.session_state.opciones_revueltas = []
-    st.session_state.feynman_actual = ""
     st.session_state.mnemo_actual = ""
+
+def borrar_pdf_completo():
+    """Borra el PDF cuando Ximena quiera subir una presentación totalmente distinta."""
+    salir_del_examen_sin_borrar_pdf()
+    st.session_state.texto_pdf = ""
+    st.session_state.nombre_pdf = ""
+    st.session_state.lista_temas = []
+    st.session_state.preguntas_vistas = []
     st.session_state.resumen_express = ""
 
-def limpiar_ayudas_pregunta():
-    st.session_state.feynman_actual = ""
-    st.session_state.mnemo_actual = ""
+def generar_nuevas_preguntas_pdf(tema_elegido, num_preguntas, estilo_quiz, api_key):
+    """Genera preguntas asegurando que NO se repitan las que ya vio Ximena."""
+    llm = ChatGoogleGenerativeAI(model=MODELO_IA, temperature=0.55, google_api_key=api_key)
+    
+    # Lista de las últimas 35 preguntas ya hechas para prohibir que las repita
+    historial_prohibido = "\n".join([f"- {q}" for q in st.session_state.preguntas_vistas[-35:]])
+    if not historial_prohibido:
+        historial_prohibido = "Ninguna todavía."
+
+    prompt_quiz = PromptTemplate(
+        template=(
+            "Eres un profesor experto de la facultad de medicina. "
+            "Basado ESTRICTAMENTE en el documento, crea exactamente {num_preguntas} preguntas NUEVAS de opción múltiple "
+            "enfocadas en: {tema_especifico}.\n"
+            "El estilo de las preguntas debe ser: {estilo}.\n\n"
+            "REGLA CRÍTICA DE VARIEDAD: Tienes ESTRICTAMENTE PROHIBIDO repetir o parafrasear cualquiera de estas preguntas que ya hiciste antes:\n"
+            "{prohibidas}\n\n"
+            "Explora detalles, mecanismos, relaciones anatómicas, datos clínicos o conceptos diferentes del texto que no se hayan preguntado aún. "
+            "Asegúrate de que las 4 opciones sean plausibles y la explicación sea muy didáctica.\n\n"
+            "{format_instructions}\n\nDocumento:\n{texto}"
+        ),
+        input_variables=["num_preguntas", "tema_especifico", "estilo", "prohibidas", "texto"],
+        partial_variables={"format_instructions": parser_quiz.get_format_instructions()}
+    )
+    cadena_quiz = prompt_quiz | llm | parser_quiz
+    resultado_quiz = cadena_quiz.invoke({
+        "num_preguntas": num_preguntas,
+        "tema_especifico": tema_elegido,
+        "estilo": estilo_quiz,
+        "prohibidas": historial_prohibido,
+        "texto": st.session_state.texto_pdf
+    })
+    quiz_generado = [p.dict() for p in resultado_quiz.preguntas]
+    
+    # Registrar estas nuevas preguntas como ya vistas
+    for p in quiz_generado:
+        st.session_state.preguntas_vistas.append(p["pregunta"])
+        
+    st.session_state.quiz = quiz_generado
+    st.session_state.errores_quiz = []
+    st.session_state.tema_actual = tema_elegido
+    st.session_state.estilo_actual = estilo_quiz
+    st.session_state.indice_actual = 0
+    st.session_state.puntaje = 0
+    st.session_state.respuesta_revisada = False
+    st.session_state.opciones_revueltas = []
+    st.session_state.bandera_puntaje = True
+    guardar_en_historial(tema_elegido, quiz_generado)
 
 # --- FRASES EDITORIALES PARA XIMENA ---
 frases_ximena = [
@@ -348,7 +392,7 @@ frases_ximena = [
     "“Estudiar medicina es un arte; hoy estás más cerca de tu meta que ayer.”"
 ]
 
-# --- PANEL LATERAL (CON LA FOTO DE XIMENA) ---
+# --- PANEL LATERAL ---
 with st.sidebar:
     avatar_src = obtener_foto_perfil()
     
@@ -363,7 +407,6 @@ with st.sidebar:
     
     st.markdown(f'<div class="quote-box">{random.choice(frases_ximena)}</div>', unsafe_allow_html=True)
     
-    # CONEXIÓN CON API KEY
     if "GOOGLE_API_KEY" in st.secrets:
         api_key = st.secrets["GOOGLE_API_KEY"]
         st.markdown('<p style="font-size: 0.8rem; opacity: 0.75; text-align: center;"><span class="status-dot"></span>Motor de Inteligencia Artificial Activo</p>', unsafe_allow_html=True)
@@ -373,7 +416,6 @@ with st.sidebar:
 
     st.markdown("---")
     
-    # MÉTRICAS DEL DÍA
     st.markdown("<p style='font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1.5px; opacity: 0.6; font-weight: 700;'>Registro de Estudio</p>", unsafe_allow_html=True)
     c1, c2 = st.columns(2)
     with c1:
@@ -381,7 +423,6 @@ with st.sidebar:
     with c2:
         st.metric("Reactivos Hoy", st.session_state.total_respondidas_hoy)
 
-    # TEMPORIZADOR POMODORO
     with st.expander("Temporizador Pomodoro"):
         st.caption("Sesiones de enfoque profundo sin distracciones.")
         min_pomo = st.selectbox("Minutos por bloque:", [25, 45, 15], index=0)
@@ -398,8 +439,8 @@ with st.sidebar:
         )
         st.markdown(html_score, unsafe_allow_html=True)
         st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Finalizar y Volver al Inicio", use_container_width=True):
-            reiniciar_todo()
+        if st.button("Volver al Selector de Temas", use_container_width=True):
+            salir_del_examen_sin_borrar_pdf()
             st.rerun()
 
 # =====================================================================
@@ -423,7 +464,7 @@ if not st.session_state.quiz:
     ])
     
     # -----------------------------------------------------------------
-    # PESTAÑA 1: DOCUMENTOS PDF + RESUMEN EXPRESS + CONFIGURADOR DE QUIZ
+    # PESTAÑA 1: DOCUMENTOS PDF (CON GENERADOR INFINITO DE TANDAS)
     # -----------------------------------------------------------------
     with tab_pdf:
         st.markdown(
@@ -431,7 +472,7 @@ if not st.session_state.quiz:
             '<img src="https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?auto=format&fit=crop&w=1200&q=80" class="feature-card-img">'
             '<div class="feature-card-body">'
             '<p class="feature-card-title">Estudio por Capítulos y Diapositivas</p>'
-            '<p class="feature-card-sub">Carga tus presentaciones o capítulos en PDF para desglosar el temario, crear exámenes clínicos o generar hojas de repaso.</p>'
+            '<p class="feature-card-sub">Carga tu presentación una sola vez y genera todas las tandas de preguntas diferentes que necesites sin que se repitan.</p>'
             '</div></div>',
             unsafe_allow_html=True
         )
@@ -451,7 +492,10 @@ if not st.session_state.quiz:
                                 loader = PyPDFLoader(tmp_path)
                                 paginas = loader.load()
                                 st.session_state.texto_pdf = "\n".join([pagina.page_content for pagina in paginas])
-                                llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.1, google_api_key=api_key)
+                                st.session_state.nombre_pdf = archivo_subido.name
+                                st.session_state.preguntas_vistas = []
+                                
+                                llm = ChatGoogleGenerativeAI(model=MODELO_IA, temperature=0.1, google_api_key=api_key)
                                 prompt_temas = PromptTemplate(
                                     template="Lee este documento médico y extrae una lista de los subtemas o capítulos principales.\n\nTexto:\n{texto}\n\n{format_instructions}",
                                     input_variables=["texto"],
@@ -465,14 +509,14 @@ if not st.session_state.quiz:
                             finally:
                                 os.unlink(tmp_path)
         else:
-            st.success("Documento procesado. Configura los parámetros de tu sesión:")
+            st.success(f"Presentación activa: **{st.session_state.nombre_pdf}** ({len(st.session_state.preguntas_vistas)} preguntas únicas generadas hasta ahora de este archivo).")
             
             with st.container(border=True):
                 tema_elegido = st.selectbox("1. Módulo o capítulo a estudiar:", ["Documento Completo (Todos los temas)"] + st.session_state.lista_temas)
                 
                 col_cfg1, col_cfg2 = st.columns(2)
                 with col_cfg1:
-                    num_preguntas = st.select_slider("2. Extensión de la evaluación:", options=[5, 10, 15], value=10)
+                    num_preguntas = st.select_slider("2. ¿Cuántas preguntas quieres en esta tanda?", options=[5, 10, 15, 20], value=10)
                 with col_cfg2:
                     estilo_quiz = st.selectbox(
                         "3. Enfoque pedagógico:",
@@ -485,36 +529,10 @@ if not st.session_state.quiz:
                 
                 col_btn1, col_btn2 = st.columns(2)
                 with col_btn1:
-                    if st.button(f"Generar Evaluación ({num_preguntas} Reactivos)", type="primary", use_container_width=True):
-                        with st.spinner(f"Elaborando {num_preguntas} reactivos médicos..."):
+                    if st.button(f"Generar Nueva Tanda ({num_preguntas} Preguntas Únicas)", type="primary", use_container_width=True):
+                        with st.spinner(f"Elaborando {num_preguntas} preguntas inéditas de este documento..."):
                             try:
-                                llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.3, google_api_key=api_key)
-                                prompt_quiz = PromptTemplate(
-                                    template=(
-                                        "Eres un profesor experto de la facultad de medicina. "
-                                        "Basado ESTRICTAMENTE en el documento, crea exactamente {num_preguntas} preguntas de opción múltiple "
-                                        "enfocadas en: {tema_especifico}.\n"
-                                        "El estilo de las preguntas debe ser: {estilo}.\n"
-                                        "Asegúrate de que las 4 opciones sean plausibles y la explicación sea muy didáctica.\n\n"
-                                        "{format_instructions}\n\nDocumento:\n{texto}"
-                                    ),
-                                    input_variables=["num_preguntas", "tema_especifico", "estilo", "texto"],
-                                    partial_variables={"format_instructions": parser_quiz.get_format_instructions()}
-                                )
-                                cadena_quiz = prompt_quiz | llm | parser_quiz
-                                resultado_quiz = cadena_quiz.invoke({
-                                    "num_preguntas": num_preguntas,
-                                    "tema_especifico": tema_elegido,
-                                    "estilo": estilo_quiz,
-                                    "texto": st.session_state.texto_pdf
-                                })
-                                quiz_generado = [p.dict() for p in resultado_quiz.preguntas]
-                                st.session_state.quiz = quiz_generado
-                                st.session_state.errores_quiz = []
-                                st.session_state.tema_actual = tema_elegido
-                                st.session_state.indice_actual = 0
-                                st.session_state.puntaje = 0
-                                guardar_en_historial(tema_elegido, quiz_generado)
+                                generar_nuevas_preguntas_pdf(tema_elegido, num_preguntas, estilo_quiz, api_key)
                                 st.rerun()
                             except Exception as e:
                                 st.error(f"Error al generar la evaluación: {e}")
@@ -523,7 +541,7 @@ if not st.session_state.quiz:
                     if st.button("Crear Hoja de Síntesis (Cheat Sheet)", use_container_width=True):
                         with st.spinner("Sintetizando conceptos clave y perlas clínicas..."):
                             try:
-                                llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.2, google_api_key=api_key)
+                                llm = ChatGoogleGenerativeAI(model=MODELO_IA, temperature=0.2, google_api_key=api_key)
                                 prompt_resumen = (
                                     f"Eres un tutor médico. Crea una 'Hoja de Repaso Académica' limpia, elegante y estructurada en Markdown sobre '{tema_elegido}' "
                                     f"basada en este documento. No uses emojis. Incluye:\n"
@@ -547,9 +565,16 @@ if not st.session_state.quiz:
                         mime="text/markdown"
                     )
 
-            if st.button("Cambiar Documento PDF"):
-                reiniciar_todo()
-                st.rerun()
+            col_reset1, col_reset2 = st.columns(2)
+            with col_reset1:
+                if st.button("Reiniciar memoria de preguntas vistas de este PDF", use_container_width=True):
+                    st.session_state.preguntas_vistas = []
+                    st.toast("Memoria de preguntas reiniciada.")
+                    st.rerun()
+            with col_reset2:
+                if st.button("Cerrar este PDF y subir otra presentación diferente", use_container_width=True):
+                    borrar_pdf_completo()
+                    st.rerun()
 
     # -----------------------------------------------------------------
     # PESTAÑA 2: MODO VISIÓN ANATÓMICA E HISTOLOGÍA
@@ -587,7 +612,7 @@ if not st.session_state.quiz:
                     else:
                         with st.spinner("Analizando estructuras médicas en la imagen..."):
                             encoded_img = base64.b64encode(archivo_img.read()).decode('utf-8')
-                            llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.3, google_api_key=api_key)
+                            llm = ChatGoogleGenerativeAI(model=MODELO_IA, temperature=0.45, google_api_key=api_key)
                             mensaje = HumanMessage(content=[
                                 {
                                     "type": "text",
@@ -615,7 +640,7 @@ if not st.session_state.quiz:
                                 st.error(f"Error al analizar la imagen: {e}")
 
     # -----------------------------------------------------------------
-    # PESTAÑA 3: BÓVEDA DE DECKS GUARDADOS + RESPALDO PORTÁTIL
+    # PESTAÑA 3: BIBLIOTECA DE DECKS GUARDADOS (PARA REPETIR CUANDO QUIERA)
     # -----------------------------------------------------------------
     with tab_guardados:
         st.markdown(
@@ -623,7 +648,7 @@ if not st.session_state.quiz:
             '<img src="https://images.unsplash.com/photo-1507842229356-51c61504d3ab?auto=format&fit=crop&w=1200&q=80" class="feature-card-img">'
             '<div class="feature-card-body">'
             '<p class="feature-card-title">Archivo Personal de Evaluaciones</p>'
-            '<p class="feature-card-sub">Repasa colecciones anteriores sin necesidad de volver a procesar los documentos originales.</p>'
+            '<p class="feature-card-sub">Aquí se guardan todos los quizes que has hecho para que puedas repetirlos cuantas veces quieras.</p>'
             '</div></div>',
             unsafe_allow_html=True
         )
@@ -633,19 +658,23 @@ if not st.session_state.quiz:
             st.info("Tu biblioteca está vacía por ahora. Las evaluaciones que generes se archivarán automáticamente aquí.")
         else:
             with st.container(border=True):
-                deck_elegido = st.selectbox("Selecciona una colección archivada:", list(historial.keys()))
+                lista_decks = list(reversed(list(historial.keys())))
+                deck_elegido = st.selectbox("Selecciona un quiz anterior para volver a practicarlo:", lista_decks)
                 st.caption(f"Contiene {len(historial[deck_elegido])} reactivos guardados.")
                 col_jugar, col_borrar = st.columns(2)
                 with col_jugar:
-                    if st.button("Iniciar Práctica", type="primary", use_container_width=True):
+                    if st.button("Repetir este Quiz Guardado", type="primary", use_container_width=True):
                         st.session_state.quiz = historial[deck_elegido]
                         st.session_state.errores_quiz = []
                         st.session_state.tema_actual = deck_elegido
                         st.session_state.indice_actual = 0
                         st.session_state.puntaje = 0
+                        st.session_state.respuesta_revisada = False
+                        st.session_state.opciones_revueltas = []
+                        st.session_state.bandera_puntaje = True
                         st.rerun()
                 with col_borrar:
-                    if st.button("Eliminar Colección", use_container_width=True):
+                    if st.button("Eliminar de la Biblioteca", use_container_width=True):
                         borrar_del_historial(deck_elegido)
                         st.toast("Colección eliminada del archivo.")
                         time.sleep(0.5)
@@ -682,7 +711,7 @@ if not st.session_state.quiz:
             '<img src="https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=1200&q=80" class="feature-card-img">'
             '<div class="feature-card-body">'
             '<p class="feature-card-title">Tutoría Académica Instantánea</p>'
-            '<p class="feature-card-sub">Despeja dudas puntuales de fisiología, anatomía, histología o farmacología con explicaciones adaptadas a tu estilo.</p>'
+            '<p class="feature-card-sub">Despeja dudas puntuales de fisiología, anatomía, histología o farmacología.</p>'
             '</div></div>',
             unsafe_allow_html=True
         )
@@ -691,7 +720,7 @@ if not st.session_state.quiz:
         modo_explicacion = st.radio(
             "Modalidad de explicación:",
             [
-                "Explicación Sencilla con Analogías (Método Feynman)",
+                "Explicación Clara y Directa",
                 "Regla Mnemotécnica para Memorización",
                 "Resumen Clínico Riguroso"
             ],
@@ -700,7 +729,7 @@ if not st.session_state.quiz:
         if st.button("Consultar al Tutor", type="primary"):
             if duda_ximena and api_key:
                 with st.spinner("Elaborando explicación..."):
-                    llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.4, google_api_key=api_key)
+                    llm = ChatGoogleGenerativeAI(model=MODELO_IA, temperature=0.4, google_api_key=api_key)
                     resp = llm.invoke(
                         f"Eres el tutor académico de medicina de Ximena. Responde a su consulta: '{duda_ximena}' "
                         f"utilizando el enfoque: {modo_explicacion}. Mantén un tono elegante, claro, didáctico y libre de emojis."
@@ -769,38 +798,18 @@ else:
             with st.expander("Fundamento Médico y Justificación", expanded=True):
                 st.write(pregunta_actual["explicacion"])
             
-            # HERRAMIENTAS DE APOYO EN VIVO (LIMPIAS Y SIN ERRORES DE RENDERIZADO)
-            st.caption("Herramientas de profundización:")
-            col_help1, col_help2 = st.columns(2)
-            with col_help1:
-                if st.button("Explicar con Analogía Sencilla (Feynman)", use_container_width=True):
-                    with st.spinner("Generando analogía didáctica..."):
-                        llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.4, google_api_key=api_key)
-                        prompt_f = (
-                            f"Explica este concepto médico a Ximena de manera sumamente clara usando una analogía cotidiana. "
-                            f"Escribe en párrafos limpios, sin emojis y sin código HTML.\n"
-                            f"Pregunta: {pregunta_actual['pregunta']}\n"
-                            f"Respuesta correcta: {pregunta_actual['respuesta_correcta']}\n"
-                            f"Contexto: {pregunta_actual['explicacion']}"
-                        )
-                        resp_f = llm.invoke(prompt_f)
-                        st.session_state.feynman_actual = extraer_texto_limpio(resp_f)
-            with col_help2:
-                if st.button("Generar Mnemotecnia de Memoria", use_container_width=True):
-                    with st.spinner("Creando recurso mnemotécnico..."):
-                        llm = ChatGoogleGenerativeAI(model="gemini-3.8-flash", temperature=0.6, google_api_key=api_key)
-                        prompt_m = (
-                            f"Crea una mnemotecnia corta, elegante o un acrónimo ingenioso en español (sin emojis y sin HTML) para que Ximena recuerde siempre "
-                            f"que la respuesta a '{pregunta_actual['pregunta']}' es '{pregunta_actual['respuesta_correcta']}'. "
-                            f"Explicación: {pregunta_actual['explicacion']}"
-                        )
-                        resp_m = llm.invoke(prompt_m)
-                        st.session_state.mnemo_actual = extraer_texto_limpio(resp_m)
+            # RECURSO MNEMOTÉCNICO OPCIONAL (SIN EL BOTÓN DE ANALOGÍA)
+            if st.button("Generar Mnemotecnia para recordar este dato", use_container_width=True):
+                with st.spinner("Creando recurso mnemotécnico..."):
+                    llm = ChatGoogleGenerativeAI(model=MODELO_IA, temperature=0.6, google_api_key=api_key)
+                    prompt_m = (
+                        f"Crea una mnemotecnia corta, elegante o un acrónimo ingenioso en español (sin emojis y sin HTML) para que Ximena recuerde siempre "
+                        f"que la respuesta a '{pregunta_actual['pregunta']}' es '{pregunta_actual['respuesta_correcta']}'. "
+                        f"Explicación: {pregunta_actual['explicacion']}"
+                    )
+                    resp_m = llm.invoke(prompt_m)
+                    st.session_state.mnemo_actual = extraer_texto_limpio(resp_m)
 
-            if st.session_state.feynman_actual:
-                with st.container(border=True):
-                    st.markdown("**Analogía Didáctica (Método Feynman)**")
-                    st.markdown(st.session_state.feynman_actual)
             if st.session_state.mnemo_actual:
                 with st.container(border=True):
                     st.markdown("**Recurso Mnemotécnico**")
@@ -812,12 +821,12 @@ else:
                 st.session_state.respuesta_revisada = False
                 st.session_state.opciones_revueltas = []
                 st.session_state.bandera_puntaje = True
-                limpiar_ayudas_pregunta()
+                st.session_state.mnemo_actual = ""
                 st.rerun()
                 
     else:
         # =================================================================
-        # PANTALLA FINAL DE RESULTADOS
+        # PANTALLA FINAL DE RESULTADOS (CON GENERADOR DE NUEVAS PREGUNTAS AHÍ MISMO)
         # =================================================================
         porcentaje = int((st.session_state.puntaje / total_preguntas) * 100)
         
@@ -838,6 +847,7 @@ else:
         )
         st.markdown(html_victoria, unsafe_allow_html=True)
         
+        # 1. REPASAR SOLO LAS QUE FALLÓ
         num_errores = len(st.session_state.errores_quiz)
         if num_errores > 0:
             if st.button(f"Repasar únicamente los {num_errores} reactivos incorrectos", type="primary", use_container_width=True):
@@ -846,29 +856,53 @@ else:
                 st.session_state.indice_actual = 0
                 st.session_state.puntaje = 0
                 st.session_state.respuesta_revisada = False
+                st.session_state.opciones_revueltas = []
                 st.session_state.bandera_puntaje = True
                 st.session_state.tema_actual = f"Repaso Selectivo: {st.session_state.tema_actual}"
                 st.rerun()
 
+        # 2. GENERAR PREGUNTAS TOTALMENTE NUEVAS DEL MISMO DOCUMENTO AHÍ MISMO
+        if st.session_state.texto_pdf:
+            with st.container(border=True):
+                st.markdown("#### Continuar entrenando con Preguntas Nuevas (Sin repetir)")
+                st.caption("El documento sigue cargado en memoria. Elige cuántas preguntas inéditas quieres ahora:")
+                col_n1, col_n2 = st.columns(2)
+                with col_n1:
+                     nuevas_cant = st.select_slider("Cantidad de preguntas nuevas:", options=[5, 10, 15, 20], value=10, key="slider_fin")
+                with col_n2:
+                    lista_opciones_temas = ["Documento Completo (Todos los temas)"] + st.session_state.lista_temas
+                    idx_tema = lista_opciones_temas.index(st.session_state.tema_actual) if st.session_state.tema_actual in lista_opciones_temas else 0
+                    nuevo_tema_fin = st.selectbox("Tema de la presentación:", lista_opciones_temas, index=idx_tema, key="tema_fin")
+                
+                if st.button(f"Generar {nuevas_cant} Preguntas DIFERENTES Ahora", type="primary", use_container_width=True):
+                    with st.spinner(f"Buscando conceptos nuevos y creando {nuevas_cant} preguntas inéditas..."):
+                        try:
+                            generar_nuevas_preguntas_pdf(nuevo_tema_fin, nuevas_cant, st.session_state.estilo_actual, api_key)
+                            st.rerun()
+                        except Exception as e:
+                            st.error(f"Error al generar nueva tanda: {e}")
+
+        # 3. REPETIR EL MISMO QUIZ O VOLVER AL MENÚ (CONSERVANDO EL PDF)
+        col1, col2 = st.columns(2)
+        with col1:
+            if st.button("Repetir exactamente este mismo Quiz", use_container_width=True):
+                st.session_state.indice_actual = 0
+                st.session_state.puntaje = 0
+                st.session_state.errores_quiz = []
+                st.session_state.respuesta_revisada = False
+                st.session_state.opciones_revueltas = []
+                st.session_state.bandera_puntaje = True
+                st.rerun()
+        with col2:
+            if st.button("Volver al Menú Principal (Conservando PDF)", use_container_width=True):
+                salir_del_examen_sin_borrar_pdf()
+                st.rerun()
+
         csv_anki = generar_csv_anki(st.session_state.quiz)
         st.download_button(
-            label="Exportar Colección para Anki (.CSV)",
+            label="Exportar este Quiz para Anki (.CSV)",
             data=csv_anki,
             file_name=f"Anki_{st.session_state.tema_actual[:20].replace(' ', '_')}.csv",
             mime="text/csv",
             use_container_width=True
         )
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("Repetir Evaluación Completa", use_container_width=True):
-                st.session_state.indice_actual = 0
-                st.session_state.puntaje = 0
-                st.session_state.errores_quiz = []
-                st.session_state.respuesta_revisada = False
-                st.session_state.bandera_puntaje = True
-                st.rerun()
-        with col2:
-            if st.button("Volver al Inicio", use_container_width=True):
-                reiniciar_todo()
-                st.rerun()
